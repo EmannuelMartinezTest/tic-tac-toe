@@ -2,10 +2,12 @@
 
 A live implementation of the project can be found at this [GitHub Pages Link](https://emannuelmartineztest.github.io/tic-tac-toe/).
 
-<img src="./assets/Tic-Tac-Toe.png" width="200">
-<img src="./assets/Win.png" width="200">
-<img src="./assets/Lose.png" width="200">
-<img src="./assets/Tie.png" width="200">
+<p align="center">
+  <img src="./assets/Tic-Tac-Toe.png" width="200">
+  <img src="./assets/Win.png" width="200">
+  <img src="./assets/Lose.png" width="200">
+  <img src="./assets/Tie.png" width="200">
+</p>
 
 ## Technical Design Choices
 
