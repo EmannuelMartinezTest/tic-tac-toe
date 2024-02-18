@@ -1,4 +1,75 @@
 let tic_tac_toe = (function () {
+  const ticTacToeContainer = document.querySelector(".tic-tac-toe-container");
+  const resetButton = document.querySelector("#restart") as HTMLButtonElement;
+  const headerText = document.querySelector("#header-text") as HTMLElement;
+
+  ticTacToeContainer?.addEventListener("click", processClick);
+  resetButton?.addEventListener("click", resetGame);
+
+  // prettier-ignore
+  function resetGame() {
+    userState = 0b000000000;
+    computerState = 0b000000000;
+
+    boardState = 0b000000000;
+
+    availableMoves = ["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"];
+
+    let squares: Element[] = Array.from(ticTacToeContainer?.children!);
+    squares.forEach((square) => drawPiece(square as HTMLElement, ""));
+    ticTacToeContainer?.addEventListener("click", processClick);
+    resetButton.disabled = true;
+    resetButton.style.visibility = "hidden";
+    headerText.textContent = "Tic-Tac-Toe";
+  }
+
+  function processClick(e: Event): void {
+    let userChosenSquare = e.target as HTMLElement;
+    handleUserMove(userChosenSquare);
+  }
+
+  function handleUserMove(userSquare: HTMLElement): void {
+    if (!isMoveLegal(boardState, userSquare.className)) return;
+
+    userState = applyMove(userState, userSquare.className);
+    updateBoardState();
+    drawPiece(userSquare, "X");
+    updateAvailableMoves(userSquare.className);
+
+    if (checkGameOver(userState)) return endGame("You won!");
+
+    handleComputerMove();
+  }
+
+  function selectComputerMove(): string {
+    const randomIndex = Math.floor(Math.random() * availableMoves.length);
+    return availableMoves[randomIndex];
+  }
+
+  function handleComputerMove(): void {
+    let move = selectComputerMove();
+    computerState = applyMove(computerState, move);
+    updateBoardState();
+    let computerSquare = document.querySelector(`.${move}`) as HTMLElement;
+    drawPiece(computerSquare, "O");
+    updateAvailableMoves(computerSquare.className);
+
+    if (checkGameOver(computerState)) endGame("You lose...");
+  }
+
+  function checkGameOver(state: number): boolean {
+    return WIN_STATES.some(
+      (winState) => (state & winState) === winState || boardState === END_STATE,
+    );
+  }
+
+  function endGame(message: string): void {
+    ticTacToeContainer?.removeEventListener("click", processClick);
+    headerText.textContent = message;
+    resetButton.disabled = false;
+    resetButton.style.visibility = "visible";
+  }
+
   const POSITION_SHIFTS = {
     a1: 8,
     a2: 5,
@@ -10,7 +81,6 @@ let tic_tac_toe = (function () {
     c2: 3,
     c3: 0,
   };
-
   const BIT_MASK = 0b1;
   const WIN_STATES = [
     0b111000000, 0b000111000, 0b000000111, 0b100100100, 0b010010010,
@@ -21,136 +91,41 @@ let tic_tac_toe = (function () {
 
   let userState = 0b000000000;
   let computerState = 0b000000000;
+
   let boardState = 0b000000000;
 
   let availableMoves = ["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"];
 
-  game();
-  function game() {
-    while (!gameOver()) {
-      userState = placePiece(userState);
-      updateBoardState();
-      console.log(drawBoard());
-      if (gameOver()) return;
-      computerState = placePiece(
-        computerState,
-        availableMoves[getComputerMove()],
-      );
-      updateBoardState();
-      console.log(drawBoard());
-      if (gameOver()) return;
-    }
-  }
-
-  function getComputerMove(): number {
-    let min = Math.ceil(0);
-    let max = Math.floor(availableMoves.length);
-    return Math.floor(Math.random() * (max - min) + min);
-  }
-
-  function drawBoard() {
-    let bitMask = 0b1;
-    let position = ``;
-    for (let i = 9; i > 0; i--) {
-      bitMask = 0b1 << (i - 1);
-      if (i === 3 || i === 6) position += "\n";
-      if (userState & bitMask) {
-        position += "x    ";
-      } else if (computerState & bitMask) {
-        position += "o    ";
-      } else {
-        position += "_    ";
-      }
-    }
-    return position;
-  }
-
-  function gameOver() {
-    for (let i = 0; i < WIN_STATES.length; i++) {
-      if ((WIN_STATES[i] & userState) === WIN_STATES[i]) {
-        console.log("Player wins!");
-        return true;
-      } else if ((WIN_STATES[i] & computerState) === WIN_STATES[i]) {
-        console.log("Computer wins!");
-        return true;
-      }
-    }
-    return boardState === END_STATE;
-  }
   // prettier-ignore
-  function placePiece(state: number, computerMove: string = ""): number {
-    updateBoardState();
-    // get initial position and validate it
-    let initialPosition = computerMove || prompt("Please place piece on the board! (check console for state)")?.toLowerCase();
-    if(!validPositionCheck(initialPosition)) return placePiece(state);
+  function drawPiece(outputSquare: HTMLElement, icon: string) {
+    if(!outputSquare.firstChild) return
+    outputSquare.firstChild.textContent = icon;
+  }
 
-    // see if position is a valid move (is it in my keys?)
-    let position = Object.keys(POSITION_SHIFTS).find(key => key === initialPosition) as string;
-    if(!validPositionCheck(position)) return placePiece(state);
+  function updateAvailableMoves(position: string): void {
+    const index = availableMoves.indexOf(position);
+    if (index !== -1) availableMoves.splice(index, 1);
+  }
 
-    // reassigning for consistency's sake
-    let validPosition = position;
-
-    // see if position is a legal move (is the move available? i.e. not occupied)
+  function isMoveLegal(state: number, position: string): boolean {
     // @ts-ignore
-    let currentMove = BIT_MASK << POSITION_SHIFTS[validPosition];
-    if(!legalPositionCheck(currentMove, validPosition)) return placePiece(state);
-
-    // update state if move is legal and valid
-    return state | currentMove;
+    const positionShift = POSITION_SHIFTS[position];
+    const moveBit = BIT_MASK << positionShift;
+    return (state & moveBit) === 0;
   }
 
-  function validPositionCheck(position: string | null | undefined): boolean {
-    return !(position === null || position === undefined || position === "");
+  function applyMove(state: number, position: string): number {
+    // @ts-ignore
+    const positionShift = POSITION_SHIFTS[position];
+    return state | (BIT_MASK << positionShift);
   }
 
-  function legalPositionCheck(currentMove: number, position: string) {
-    if (!(boardState & currentMove)) {
-      console.log("it's empty!");
-      // prettier-ignore
-      availableMoves.splice(availableMoves.findIndex((ele) => ele === position), 1,);
-      return true;
-    }
-    return false;
-  }
-
+  // prettier-ignore
   function updateBoardState() {
     boardState = userState | computerState;
-    console.log(boardState);
   }
 
   return {
     // placePiece,
   };
 })();
-
-/*
-    I'm storing everything in a bitmap format.
-
-    Let a player make a valid choice.
-    Update their internal board state.
-    Update joint board state
-    Show current board
-    Check to see if player won
-      If they did win
-        Make everything unclickable.
-        Show winner message.
-        Give option to reset the game
-      Otherwise, return
-
-    Let computer make a valid choice
-    ...
-
-*/
-
-/*
-      a       b      c
-     __________________
-    |     |      |     |
-  1 |_____|______|_____|
-    |     |      |     |
-  2 |_____|______|_____|
-    |     |      |     |
-  3 |_____|______|_____|
-
-*/
