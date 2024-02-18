@@ -29,12 +29,16 @@ let tic_tac_toe = (function () {
         updateBoardState();
         drawPiece(userSquare, "X");
         updateAvailableMoves(userSquare.className);
-        if (checkGameOver(userState))
+        if (checkGameWinner(userState))
             return endGame("You won!");
-        handleComputerMove();
+        if (checkGameTie())
+            return endGame("It's a tie!");
+        setTimeout(() => {
+            handleComputerMove();
+        }, 600);
     }
     function selectComputerMove() {
-        const randomIndex = Math.floor(Math.random() * availableMoves.length);
+        let randomIndex = Math.floor(Math.random() * availableMoves.length);
         return availableMoves[randomIndex];
     }
     function handleComputerMove() {
@@ -44,11 +48,16 @@ let tic_tac_toe = (function () {
         let computerSquare = document.querySelector(`.${move}`);
         drawPiece(computerSquare, "O");
         updateAvailableMoves(computerSquare.className);
-        if (checkGameOver(computerState))
+        if (checkGameWinner(computerState))
             endGame("You lose...");
+        if (checkGameTie())
+            return endGame("It's a tie!");
     }
-    function checkGameOver(state) {
-        return WIN_STATES.some((winState) => (state & winState) === winState || boardState === END_STATE);
+    function checkGameTie() {
+        return boardState === END_STATE;
+    }
+    function checkGameWinner(state) {
+        return WIN_STATES.some((winState) => (state & winState) === winState);
     }
     function endGame(message) {
         ticTacToeContainer?.removeEventListener("click", processClick);
@@ -85,19 +94,19 @@ let tic_tac_toe = (function () {
         outputSquare.firstChild.textContent = icon;
     }
     function updateAvailableMoves(position) {
-        const index = availableMoves.indexOf(position);
+        let index = availableMoves.indexOf(position);
         if (index !== -1)
             availableMoves.splice(index, 1);
     }
     function isMoveLegal(state, position) {
         // @ts-ignore
-        const positionShift = POSITION_SHIFTS[position];
-        const moveBit = BIT_MASK << positionShift;
+        let positionShift = POSITION_SHIFTS[position];
+        let moveBit = BIT_MASK << positionShift;
         return (state & moveBit) === 0;
     }
     function applyMove(state, position) {
         // @ts-ignore
-        const positionShift = POSITION_SHIFTS[position];
+        let positionShift = POSITION_SHIFTS[position];
         return state | (BIT_MASK << positionShift);
     }
     // prettier-ignore

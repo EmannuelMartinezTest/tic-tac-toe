@@ -36,13 +36,16 @@ let tic_tac_toe = (function () {
     drawPiece(userSquare, "X");
     updateAvailableMoves(userSquare.className);
 
-    if (checkGameOver(userState)) return endGame("You won!");
+    if (checkGameWinner(userState)) return endGame("You won!");
+    if (checkGameTie()) return endGame("It's a tie!");
 
-    handleComputerMove();
+    setTimeout(() => {
+      handleComputerMove();
+    }, 600);
   }
 
   function selectComputerMove(): string {
-    const randomIndex = Math.floor(Math.random() * availableMoves.length);
+    let randomIndex = Math.floor(Math.random() * availableMoves.length);
     return availableMoves[randomIndex];
   }
 
@@ -54,13 +57,16 @@ let tic_tac_toe = (function () {
     drawPiece(computerSquare, "O");
     updateAvailableMoves(computerSquare.className);
 
-    if (checkGameOver(computerState)) endGame("You lose...");
+    if (checkGameWinner(computerState)) endGame("You lose...");
+    if (checkGameTie()) return endGame("It's a tie!");
   }
 
-  function checkGameOver(state: number): boolean {
-    return WIN_STATES.some(
-      (winState) => (state & winState) === winState || boardState === END_STATE,
-    );
+  function checkGameTie(): boolean {
+    return boardState === END_STATE;
+  }
+
+  function checkGameWinner(state: number): boolean {
+    return WIN_STATES.some((winState) => (state & winState) === winState);
   }
 
   function endGame(message: string): void {
@@ -103,20 +109,20 @@ let tic_tac_toe = (function () {
   }
 
   function updateAvailableMoves(position: string): void {
-    const index = availableMoves.indexOf(position);
+    let index = availableMoves.indexOf(position);
     if (index !== -1) availableMoves.splice(index, 1);
   }
 
   function isMoveLegal(state: number, position: string): boolean {
     // @ts-ignore
-    const positionShift = POSITION_SHIFTS[position];
-    const moveBit = BIT_MASK << positionShift;
+    let positionShift = POSITION_SHIFTS[position];
+    let moveBit = BIT_MASK << positionShift;
     return (state & moveBit) === 0;
   }
 
   function applyMove(state: number, position: string): number {
     // @ts-ignore
-    const positionShift = POSITION_SHIFTS[position];
+    let positionShift = POSITION_SHIFTS[position];
     return state | (BIT_MASK << positionShift);
   }
 
