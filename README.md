@@ -1,6 +1,6 @@
 # Tic-Tac-Toe Project!
 
-A live implementation of the project can be found at this [GitHub Pages Link](https://emannuelmartineztest.github.io/tic-tac-toe/).
+A live implementation of the project can be found at this [GitHub Pages Link](https://lilyrubyroy.github.io/tic-tac-toe/).
 
 <p align="center">
   <img src="./assets/Tic-Tac-Toe.png" width="200">
